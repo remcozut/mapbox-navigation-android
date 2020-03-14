@@ -14,6 +14,7 @@ import com.mapbox.navigation.examples.core.OffboardRouterActivityKt
 import com.mapbox.navigation.examples.core.OnboardRouterActivityJava
 import com.mapbox.navigation.examples.core.OnboardRouterActivityKt
 import com.mapbox.navigation.examples.core.SimpleMapboxNavigationKt
+import com.mapbox.navigation.examples.core.SummaryBottomSheetActivity
 import com.mapbox.navigation.examples.core.TripServiceActivityKt
 import com.mapbox.navigation.examples.core.TripSessionActivityKt
 import kotlinx.android.synthetic.main.activity_core.*
@@ -89,6 +90,11 @@ class CoreActivity : AppCompatActivity() {
                 getString(R.string.title_instruction_view),
                 getString(R.string.description_instruction_view),
                 InstructionViewActivity::class.java
+            ),
+            SampleItem(
+                getString(R.string.title_summary_bottom_sheet),
+                getString(R.string.description_summary_bottom_sheet),
+                SummaryBottomSheetActivity::class.java
             )
         )
     }
