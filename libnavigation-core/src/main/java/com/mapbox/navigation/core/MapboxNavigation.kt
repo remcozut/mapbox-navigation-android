@@ -178,7 +178,7 @@ constructor(
             MapboxMetricsReporter.init(
                 context,
                 accessToken ?: throw RuntimeException(MAPBOX_NAVIGATION_TOKEN_EXCEPTION),
-                obtainUserAgent(navigationOptions.isFromNavigationUi)
+                userAgent
             )
             // TODO Add isDebugLoggingEnabled to NavigationOptions and uncomment below line
             //  MapboxMetricsReporter.toggleLogging(navigationOptions.isDebugLoggingEnabled);
@@ -189,7 +189,8 @@ constructor(
                 MapboxMetricsReporter,
                 locationEngine.javaClass.name,
                 ThreadController.getMainScopeAndRootJob(),
-                navigationOptions
+                navigationOptions,
+                    userAgent
             )
         }
 
