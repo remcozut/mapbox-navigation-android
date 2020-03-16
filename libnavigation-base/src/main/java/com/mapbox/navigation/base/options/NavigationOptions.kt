@@ -29,7 +29,8 @@ data class NavigationOptions constructor(
     val navigatorPollingDelay: Long,
     val distanceFormatter: DistanceFormatter?,
     val onboardRouterConfig: MapboxOnboardRouterConfig?,
-    val isFromNavigationUi: Boolean
+    val isFromNavigationUi: Boolean = false,
+    val isDebugLoggingEnabled: Boolean = false
 ) {
 
     /**
@@ -68,6 +69,9 @@ data class NavigationOptions constructor(
 
         fun isFromNavigationUi(flag: Boolean) =
             apply { this.isFromNavigationUi = flag }
+
+        fun isDebugLoggingEnabled(flag: Boolean) =
+            apply { this.isDebugLoggingEnabled = flag }
 
         fun build(): NavigationOptions {
             return NavigationOptions(
