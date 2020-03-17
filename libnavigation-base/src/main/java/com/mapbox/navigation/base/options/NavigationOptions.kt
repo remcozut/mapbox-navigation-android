@@ -51,6 +51,7 @@ data class NavigationOptions constructor(
         private var distanceFormatter: DistanceFormatter? = null
         private var onboardRouterConfig: MapboxOnboardRouterConfig? = null
         private var isFromNavigationUi: Boolean = false
+        private var isDebugLoggingEnabled: Boolean = false
 
         fun roundingIncrement(roundingIncrement: Int) =
             apply { this.roundingIncrement = roundingIncrement }
@@ -80,7 +81,8 @@ data class NavigationOptions constructor(
                 navigatorPollingDelay = navigatorPollingDelay,
                 distanceFormatter = distanceFormatter,
                 onboardRouterConfig = onboardRouterConfig,
-                isFromNavigationUi = isFromNavigationUi
+                isFromNavigationUi = isFromNavigationUi,
+                isDebugLoggingEnabled = isDebugLoggingEnabled
             )
         }
     }
