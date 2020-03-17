@@ -179,7 +179,7 @@ constructor(
             MapboxMetricsReporter.init(
                 context,
                 accessToken ?: throw RuntimeException(MAPBOX_NAVIGATION_TOKEN_EXCEPTION),
-                userAgent
+                obtainUserAgent(navigationOptions.isFromNavigationUi)
             )
             MapboxMetricsReporter.toggleLogging(navigationOptions.isDebugLoggingEnabled)
             MapboxNavigationTelemetry.initialize(
@@ -190,7 +190,7 @@ constructor(
                 locationEngine.javaClass.name,
                 ThreadController.getMainScopeAndRootJob(),
                 navigationOptions,
-                userAgent
+                obtainUserAgent(navigationOptions.isFromNavigationUi)
             )
         }
 
