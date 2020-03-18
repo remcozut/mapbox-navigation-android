@@ -4,6 +4,7 @@ import android.location.Location
 import android.util.Log
 import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.navigation.base.trip.model.RouteProgress
+import com.mapbox.navigation.base.trip.model.RouteProgressState
 import com.mapbox.navigation.core.directions.session.RoutesObserver
 import com.mapbox.navigation.core.telemetry.MapboxNavigationTelemetry.LOCATION_BUFFER_MAX_SIZE
 import com.mapbox.navigation.core.telemetry.MapboxNavigationTelemetry.TAG
@@ -191,6 +192,11 @@ internal class TelemetryLocationAndProgressDispatcher(scope: CoroutineScope) :
     fun getOriginalRouteReadWrite() = originalRoute
 
     override fun onRouteProgressChanged(routeProgress: RouteProgress) {
+        val arrived = routeProgress.currentState()?.let { currentState ->
+            currentState == RouteProgressState.ROUTE_ARRIVED
+        } ?: false
+        val temp = false
+        Log.d(TAG, "route progress state = ${routeProgress.currentState()}")
         val data = RouteProgressWithTimestamp(Time.SystemImpl.millis(), routeProgress)
         this.routeProgress.set(data)
         channelOnRouteProgress.offer(data)

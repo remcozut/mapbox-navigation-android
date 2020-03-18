@@ -585,6 +585,8 @@ internal object MapboxNavigationTelemetry : MapboxNavigationTelemetryInterface {
                 when (routeData.routeProgress.currentState()) {
                     RouteProgressState.ROUTE_ARRIVED -> {
                         processArrival()
+                        MapboxMetricsReporter.disable()
+                        MapboxMetricsReporter.init(context, mapboxToken, localUserAgent)
                         continueRunning = false
                     } // END
                     RouteProgressState.LOCATION_TRACKING -> {
