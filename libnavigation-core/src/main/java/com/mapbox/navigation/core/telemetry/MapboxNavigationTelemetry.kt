@@ -192,7 +192,7 @@ internal object MapboxNavigationTelemetry : MapboxNavigationTelemetryInterface {
                             postUserEventBeforeInit // The navigation session is over, disallow posting user feedback events
                     when (dynamicValues.routeArrived.get()) {
                         true -> {
-                            // Do nothing. The arrival event has been handled
+                            processCancellationAfterArrival()
                         }
                         false -> {
                             telemetryThreadControl.scope.launch {
@@ -452,21 +452,12 @@ internal object MapboxNavigationTelemetry : MapboxNavigationTelemetryInterface {
      */
     private suspend fun handleSessionCanceled(): CompletableDeferred<Boolean> {
         val retVal = CompletableDeferred<Boolean>()
-        when (dynamicValues.routeArrived.get()) {
-            true -> {
-                // Do nothing
-                Log.d(TAG, "attempt to cancel after arrival")
-                retVal.complete(true)
-            }
-            false -> {
-                val cancelEvent = NavigationCancelEvent(PhoneState(context))
-                populateNavigationEvent(cancelEvent)
-                val result = telemetryEventGate(cancelEvent)
-                Log.d(TAG, "CANCEL event sent $result")
-                cancelCollectionAndDisable().join()
-                retVal.complete(true)
-            }
-        }
+        val cancelEvent = NavigationCancelEvent(PhoneState(context))
+        populateNavigationEvent(cancelEvent)
+        val result = telemetryEventGate(cancelEvent)
+        Log.d(TAG, "CANCEL event sent $result")
+        cancelCollectionAndDisable().join()
+        retVal.complete(true)
         return retVal
     }
 
@@ -556,6 +547,11 @@ internal object MapboxNavigationTelemetry : MapboxNavigationTelemetryInterface {
         handleSessionStop()
     }
 
+    private fun processCancellationAfterArrival() {
+        dynamicValues.reset()
+        populateOriginalRouteConditionally()
+    }
+
     private suspend fun processArrival() {
         Log.d(TAG, "you have arrived")
         dynamicValues.tripIdentifier.set(TelemetryUtils.obtainUniversalUniqueIdentifier())
@@ -567,6 +563,8 @@ internal object MapboxNavigationTelemetry : MapboxNavigationTelemetryInterface {
         Log.d(TAG, "ARRIVAL event sent $result")
         callbackDispatcher.cancelCollectionAndPostFinalEvents().join()
         populateOriginalRouteConditionally()
+        MapboxMetricsReporter.disable()
+        MapboxMetricsReporter.init(context, mapboxToken, localUserAgent)
     }
 
     /**
@@ -585,8 +583,6 @@ internal object MapboxNavigationTelemetry : MapboxNavigationTelemetryInterface {
                 when (routeData.routeProgress.currentState()) {
                     RouteProgressState.ROUTE_ARRIVED -> {
                         processArrival()
-                        MapboxMetricsReporter.disable()
-                        MapboxMetricsReporter.init(context, mapboxToken, localUserAgent)
                         continueRunning = false
                     } // END
                     RouteProgressState.LOCATION_TRACKING -> {

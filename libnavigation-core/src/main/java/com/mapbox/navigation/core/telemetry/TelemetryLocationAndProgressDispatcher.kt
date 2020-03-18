@@ -192,11 +192,11 @@ internal class TelemetryLocationAndProgressDispatcher(scope: CoroutineScope) :
     fun getOriginalRouteReadWrite() = originalRoute
 
     override fun onRouteProgressChanged(routeProgress: RouteProgress) {
-        val arrived = routeProgress.currentState()?.let { currentState ->
-            currentState == RouteProgressState.ROUTE_ARRIVED
-        } ?: false
-        val temp = false
-        Log.d(TAG, "route progress state = ${routeProgress.currentState()}")
+//        val arrived = routeProgress.currentState()?.let { currentState ->
+//            currentState == RouteProgressState.ROUTE_ARRIVED
+//        } ?: false
+//        val temp = false
+//        Log.d(TAG, "route progress state = ${routeProgress.currentState()}")
         val data = RouteProgressWithTimestamp(Time.SystemImpl.millis(), routeProgress)
         this.routeProgress.set(data)
         channelOnRouteProgress.offer(data)
