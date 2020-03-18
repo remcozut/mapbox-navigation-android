@@ -565,7 +565,6 @@ internal object MapboxNavigationTelemetry : MapboxNavigationTelemetryInterface {
         populateNavigationEvent(arriveEvent)
         val result = telemetryEventGate(arriveEvent)
         Log.d(TAG, "ARRIVAL event sent $result")
-        cancelCollectionAndDisable().join()
         callbackDispatcher.cancelCollectionAndPostFinalEvents().join()
         populateOriginalRouteConditionally()
     }
