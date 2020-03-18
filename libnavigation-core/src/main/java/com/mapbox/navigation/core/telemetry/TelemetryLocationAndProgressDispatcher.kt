@@ -42,10 +42,10 @@ internal class TelemetryLocationAndProgressDispatcher(scope: CoroutineScope) :
             originalRouteDelegate = originalRoutePostInit
         }
     }
-    private val originalRouteDeffered = CompletableDeferred<DirectionsRoute>()
-    private var originalRouteDefferedValue: DirectionsRoute? = null
+    private val originalRouteDiffered = CompletableDeferred<DirectionsRoute>()
+    private var originalRouteDifferedValue: DirectionsRoute? = null
 
-    private val originalRoutePostInit = { routes: List<DirectionsRoute> -> Unit }
+    private val originalRoutePostInit = { _: List<DirectionsRoute> -> Unit }
     private var originalRouteDelegate: (List<DirectionsRoute>) -> Unit = originalRoutePreInit
     private val firstLocation = CompletableDeferred<Location>()
     private var firstLocationValue: Location? = null
@@ -173,11 +173,10 @@ internal class TelemetryLocationAndProgressDispatcher(scope: CoroutineScope) :
      * to the back-end server
      */
     fun cancelCollectionAndPostFinalEvents(): Job {
-        val job = ThreadController.getIOScopeAndRootJob().scope.launch {
+        return ThreadController.getIOScopeAndRootJob().scope.launch {
             flushBuffers()
             locationEventBuffer.clear()
         }
-        return job
     }
 
     /**
@@ -187,7 +186,9 @@ internal class TelemetryLocationAndProgressDispatcher(scope: CoroutineScope) :
 
     fun getCopyOfCurrentLocationBuffer() = currentLocationBuffer.getCopy()
 
-    fun getOriginalRoute() = originalRoute.get()
+    fun getOriginalRouteReadOnly() = originalRoute.get()
+
+    fun getOriginalRouteReadWrite() = originalRoute
 
     override fun onRouteProgressChanged(routeProgress: RouteProgress) {
         val data = RouteProgressWithTimestamp(Time.SystemImpl.millis(), routeProgress)
@@ -206,7 +207,7 @@ internal class TelemetryLocationAndProgressDispatcher(scope: CoroutineScope) :
 
     fun clearOriginalRoute() {
         originalRoute.set(null)
-        originalRouteDefferedValue = null
+        originalRouteDifferedValue = null
         originalRouteDelegate = originalRoutePreInit
     }
 
@@ -234,16 +235,16 @@ internal class TelemetryLocationAndProgressDispatcher(scope: CoroutineScope) :
 
     fun getFirstLocationAsync() = firstLocation
 
-    fun getOriginalRouteAsync() = originalRouteDeffered
+    fun getOriginalRouteAsync() = originalRouteDiffered
 
     private fun notifyOfNewRoute(routes: List<DirectionsRoute>) {
-        when (originalRouteDefferedValue) {
+        when (originalRouteDifferedValue) {
             null -> {
                 Log.d(TAG, "First time route set")
                 if (routes.isNotEmpty()) {
-                    originalRouteDefferedValue = routes[0]
-                    originalRouteDefferedValue?.let { route ->
-                        originalRouteDeffered.complete(route)
+                    originalRouteDifferedValue = routes[0]
+                    originalRouteDifferedValue?.let { route ->
+                        originalRouteDiffered.complete(route)
                     }
                 } else {
                     Log.d(TAG, "Empty route list received. Not setting route 2")
@@ -252,8 +253,8 @@ internal class TelemetryLocationAndProgressDispatcher(scope: CoroutineScope) :
             else -> {
                 if (routes.isNotEmpty()) {
                     Log.d(TAG, "Subsequent route set")
-                    originalRouteDefferedValue?.let { route ->
-                        originalRouteDeffered.complete(route)
+                    originalRouteDifferedValue?.let { route ->
+                        originalRouteDiffered.complete(route)
                     }
                 } else {
                     Log.d(TAG, "Empty route list received. Not setting route 2")
