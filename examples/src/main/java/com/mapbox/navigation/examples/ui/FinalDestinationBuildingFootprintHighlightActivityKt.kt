@@ -248,7 +248,7 @@ class FinalDestinationBuildingFootprintHighlightActivityKt : AppCompatActivity()
                 Toast.makeText(this@FinalDestinationBuildingFootprintHighlightActivityKt, "Empty routes", Toast.LENGTH_SHORT)
                         .show()
             }
-            Timber.d("route changed %s", routes.toString())
+//            Timber.d("route changed %s", routes.toString())
         }
     }
 

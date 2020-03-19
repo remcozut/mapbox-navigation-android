@@ -23,6 +23,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
 
+typealias RouteProgressReference = (RouteProgress) -> Unit
 internal class TelemetryLocationAndProgressDispatcher(scope: CoroutineScope) :
     RouteProgressObserver, LocationObserver, RoutesObserver {
     private var lastLocation: AtomicReference<Location?> = AtomicReference(null)
@@ -50,7 +51,12 @@ internal class TelemetryLocationAndProgressDispatcher(scope: CoroutineScope) :
     private var originalRouteDelegate: (List<DirectionsRoute>) -> Unit = originalRoutePreInit
     private val firstLocation = CompletableDeferred<Location>()
     private var firstLocationValue: Location? = null
+    private var priorState = RouteProgressState.ROUTE_INVALID
+    private var routeProgressPredicate = AtomicReference<RouteProgressReference>()
 
+    init {
+        routeProgressPredicate.set { routeProgress -> beforeArrival(routeProgress) }
+    }
     /**
      * This class provides thread-safe access to a mutable list of locations
      */
@@ -191,15 +197,42 @@ internal class TelemetryLocationAndProgressDispatcher(scope: CoroutineScope) :
 
     fun getOriginalRouteReadWrite() = originalRoute
 
-    override fun onRouteProgressChanged(routeProgress: RouteProgress) {
-//        val arrived = routeProgress.currentState()?.let { currentState ->
-//            currentState == RouteProgressState.ROUTE_ARRIVED
-//        } ?: false
-//        val temp = false
-//        Log.d(TAG, "route progress state = ${routeProgress.currentState()}")
+    fun resetRouteProgressProcessor() {
+        routeProgressPredicate.set { routeProgress -> beforeArrival(routeProgress) }
+    }
+
+    /**
+     * This method is called for any state change, excluding RouteProgressState.ROUTE_ARRIVED.
+     * It forwards the route progress data to a listener and saves it to a local variable
+     */
+    private fun beforeArrival(routeProgress: RouteProgress) {
         val data = RouteProgressWithTimestamp(Time.SystemImpl.millis(), routeProgress)
         this.routeProgress.set(data)
+        Log.d(TAG, "From onRouteProgressChanged ${data.routeProgress.currentState()}")
         channelOnRouteProgress.offer(data)
+        if (routeProgress.currentState() == RouteProgressState.ROUTE_ARRIVED) {
+            routeProgressPredicate.set { progress -> afterArrival(progress) }
+        }
+    }
+
+    /**
+     * This method is called in response to receiving a RouteProgressState.ROUTE_ARRIVED event.
+     * It stores the route progress data without notifying listeners.
+     */
+    private fun afterArrival(routeProgress: RouteProgress) {
+        when (routeProgress.currentState()) {
+            priorState -> { }
+            else -> {
+                priorState = routeProgress.currentState() ?: priorState
+                Log.d(TAG, "route progress state = ${routeProgress.currentState()}")
+            }
+        }
+        val data = RouteProgressWithTimestamp(Time.SystemImpl.millis(), routeProgress)
+        this.routeProgress.set(data)
+    }
+
+    override fun onRouteProgressChanged(routeProgress: RouteProgress) {
+        routeProgressPredicate.get()(routeProgress)
     }
 
     fun getRouteProgressChannel(): ReceiveChannel<RouteProgressWithTimestamp> =

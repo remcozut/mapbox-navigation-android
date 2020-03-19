@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
+import android.os.StrictMode
 import android.view.View
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -55,6 +56,9 @@ class ExampleActivity : HistoryActivity(), ExampleView, MetricsObserver {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        StrictMode.setThreadPolicy(
+                StrictMode.ThreadPolicy.Builder().permitAll().build()
+        )
         setContentView(R.layout.activity_example)
         setupWith(savedInstanceState)
         addNavigationForHistory(viewModel.retrieveNavigation())

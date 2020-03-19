@@ -180,6 +180,7 @@ internal object MapboxNavigationTelemetry : MapboxNavigationTelemetryInterface {
             when (tripSessionState) {
                 TripSessionState.STARTED -> {
                     telemetryThreadControl.scope.launch {
+                        callbackDispatcher.resetRouteProgressProcessor()
                         enableTelemetryReportingConditionally()
                         postUserEventDelegate =
                                 postUserFeedbackEventAfterInit // Telemetry is initialized and the user selected a route. Allow user feedback events to be posted
@@ -192,10 +193,12 @@ internal object MapboxNavigationTelemetry : MapboxNavigationTelemetryInterface {
                             postUserEventBeforeInit // The navigation session is over, disallow posting user feedback events
                     when (dynamicValues.routeArrived.get()) {
                         true -> {
+                            Log.d(TAG, "calling processCancellationAfterArrival()")
                             processCancellationAfterArrival()
                         }
                         false -> {
                             telemetryThreadControl.scope.launch {
+                                Log.d(TAG, "calling processCancellation()")
                                 processCancellation()
                             }
                         }
@@ -563,8 +566,6 @@ internal object MapboxNavigationTelemetry : MapboxNavigationTelemetryInterface {
         Log.d(TAG, "ARRIVAL event sent $result")
         callbackDispatcher.cancelCollectionAndPostFinalEvents().join()
         populateOriginalRouteConditionally()
-        MapboxMetricsReporter.disable()
-        MapboxMetricsReporter.init(context, mapboxToken, localUserAgent)
     }
 
     /**
